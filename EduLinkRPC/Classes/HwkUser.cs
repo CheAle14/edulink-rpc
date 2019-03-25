@@ -18,10 +18,7 @@ namespace EduLinkRPC.Classes
         [JsonIgnore]
         public Edulink EdulinkClient;
 
-        // homework
-        // preferences
-        // classes...
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonIgnore]
         public List<Homework> Homework;
 
         /// <summary>
@@ -72,10 +69,19 @@ namespace EduLinkRPC.Classes
 #endif
             if (hwk.Completed)
                 return false;
+
+            if (OtherHomeworksMarkedAsDone.Contains(hwk.Id))
+                return false;
+
             return true;
         }
 
         public List<string> Classes = new List<string>();
+
+        /// <summary>
+        /// Homeworks of other people that are marked as done.
+        /// </summary>
+        public List<int> OtherHomeworksMarkedAsDone = new List<int>();
 
         [JsonConstructor]
         private HwkUser(string username, string password, SocketGuildUser user, List<int> notifyOnDays)
