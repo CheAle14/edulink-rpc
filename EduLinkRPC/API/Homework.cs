@@ -1,23 +1,26 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace EduLinkRPC.API
 {
+    [JsonObject(MemberSerialization.OptOut)]
     internal class Homework
     {
-        internal int id { get; set; }
-        internal string activity { get; set; }
-        internal List<Attachment> attachments { get; set; }
-        internal DateTime available_date { get; set; }
-        internal string available_text { get; set; }
-        internal bool completed { get; set; }
-        internal string description { get; set; }
-        internal string due_text { get; set; }
-        internal int owner_id { get; set; }
-        internal string set_by { get; set; }
-        internal string status { get; set; }
-        internal string subject { get; set; }
-        internal string user_type { get; set; }
+        public int id { get; set; }
+        public string activity { get; set; }
+        public List<Attachment> attachments { get; set; }
+        public DateTime available_date { get; set; }
+        public string available_text { get; set; }
+        public bool completed { get; set; }
+        public string description { get; set; }
+        public DateTime due_date { get; set; }
+        public string due_text { get; set; }
+        public int owner_id { get; set; }
+        public string set_by { get; set; }
+        public string status { get; set; }
+        public string subject { get; set; }
+        public string user_type { get; set; }
     }
 }

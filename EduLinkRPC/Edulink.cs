@@ -132,18 +132,8 @@ namespace EduLinkRPC
         internal string _token;
         internal string AuthToken { get
             {
-                try
-                {
-                    if (string.IsNullOrWhiteSpace(_token))
-                        throw new Exception("not logged in"); // no point asking, since we arent even logged in to begin with
-                    var statusResponse = status();
-                } catch (Exception ex)
-                {
-                    if(ex.Message.Contains("not logged in"))
-                    {
-                        login(); // try to login
-                    }
-                }
+                if (string.IsNullOrWhiteSpace(_token))
+                    login();
                 return _token;
             } set { _token = value; } }
         internal int Establishment;
@@ -247,9 +237,25 @@ namespace EduLinkRPC
             return status();
         }
 
-        public JToken GetHomework()
+        public Homework[] GetHomework(bool includePast = false)
         {
-            return homework();
+            var response = homework();
+            var hmwk = response["homework"];
+            API.Homework[] models = hmwk["current"].ToObject<API.Homework[]>();
+            if(includePast)
+            {
+                API.Homework[] pastModels = hmwk["past"].ToObject<API.Homework[]>();
+                var things = models.ToList();
+                things.AddRange(pastModels);
+                models = things.ToArray();
+            }
+            List<Homework> homeworks = new List<Homework>();
+            foreach(var hwk in models)
+            {
+                var created = Homework.Create(this, hwk);
+                homeworks.Add(created);
+            }
+            return homeworks.ToArray();
         }
 
         public JToken CompleteHomework(Homework hwk)

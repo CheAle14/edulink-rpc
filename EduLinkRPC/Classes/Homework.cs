@@ -60,6 +60,12 @@ namespace EduLinkRPC.Classes
         [JsonProperty("user_type")]
         public string UserType { get; internal set; }
 
+        [JsonIgnore]
+        public bool Current { get
+            {
+                return this.DueDate >= DateTime.Now;
+            } }
+
         public List<BaseClass> GivenTo { get; set; } = new List<BaseClass>();
 
         public List<HwkUser> AppliesTo { get; set; } = new List<HwkUser>();
@@ -97,6 +103,17 @@ namespace EduLinkRPC.Classes
             this.Id = model.id;
             this.Activity = model.activity;
             this.Attachments = model.attachments.Select(x => HwkAttachment.Create(Client, x)).ToList();
+            this.AvailableDate = model.available_date;
+            this.AvailableText = model.available_text;
+            this.Completed = model.completed;
+            this.Description = model.description;
+            this.DueDate = model.due_date;
+            this.DueText = model.due_text;
+            this.OwnerId = model.owner_id;
+            this.SetBy = model.set_by;
+            this.Status = model.status;
+            this.Subject = model.subject;
+            this.UserType = model.user_type;
         }
     }
 }

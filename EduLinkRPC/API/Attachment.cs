@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,8 +7,8 @@ namespace EduLinkRPC.API
 {
     internal class Attachment
     {
-        internal string filename { get; set; }
-        internal long filesize { get; set; }
-        internal string mime_type { get; set; }
+        public string filename { get; set; }
+        public long filesize { get; set; }
+        public string mime_type { get; set; }
     }
 }

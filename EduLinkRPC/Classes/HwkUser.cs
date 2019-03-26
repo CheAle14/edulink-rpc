@@ -15,6 +15,9 @@ namespace EduLinkRPC.Classes
         public string Username;
         public string Password;
 
+        [JsonIgnore] // if password is empty, then we should only ping them if they are in classes.
+        public bool IsNotifyOnly => string.IsNullOrWhiteSpace(Password);
+
         [JsonIgnore]
         public Edulink EdulinkClient;
 
