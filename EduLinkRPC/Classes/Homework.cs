@@ -1,15 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace EduLinkRPC.Classes
 {
-    public class Homework
+    public class Homework : EdulinkObject<int>
     {
-        [JsonProperty("id")]
-        public int Id { get; internal set; }
-
         [JsonProperty("activity")]
         public string Activity { get; internal set; }
 
@@ -83,5 +81,22 @@ namespace EduLinkRPC.Classes
                 }
                 return list;
             } }
+
+        internal Homework(Edulink client, API.Homework model) : base(client)
+        {
+            Update(model);
+        }
+
+        internal static Homework Create(Edulink client, API.Homework model)
+        {
+            return new Homework(client, model);
+        }
+
+        internal void Update(API.Homework model)
+        {
+            this.Id = model.id;
+            this.Activity = model.activity;
+            this.Attachments = model.attachments.Select(x => HwkAttachment.Create(Client, x)).ToList();
+        }
     }
 }
