@@ -13,21 +13,25 @@ using Newtonsoft.Json.Linq;
 
 namespace EduLinkRPC
 {
-    internal class JsonRpcRequest
+    public class EdulinkObject
     {
-        public string jsonrpc = "2.0";
-        public string method;
-        [JsonProperty("params")]
-        public Dictionary<string, object> params_;
-        public string uuid;
-        public string id;
+        internal Edulink Client { get; set; }
+
+        internal EdulinkObject(Edulink client)
+        {
+            Client = client;
+        }
     }
 
-    internal class JsonRpcResponse
+    public class EdulinkObject<T> : EdulinkObject
     {
+        public T Id { get; internal set; }
+        internal EdulinkObject(Edulink client) : base(client)
+        { 
+
+        }
 
     }
-
 
     internal class RPCClient
     {
@@ -58,18 +62,38 @@ namespace EduLinkRPC
                     return result;
                 } else
                 {
-                    throw new Exception("Failed: " + result.Value<string>("error"));
+                    throw new EdulinkException(this.client, result.Value<string>("error"));
                 }
             }
-            throw new Exception("Failed: " + resp.Content.ReadAsStringAsync().Result);
+            throw new EdulinkException(this.client, resp.Content.ReadAsStringAsync().Result);
         }
 
+        [Obsolete]
         internal JToken Call(string method) {
             return CallInternal(method, null);
         }
+
+
         internal JToken Call(string method, Dictionary<string, object> paramaters)
         {
-            return CallInternal(method, paramaters);
+            JToken retn = null;
+            try
+            {
+                retn = CallInternal(method, paramaters);
+            }
+            catch(EdulinkException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                if(ex.Message.Contains("not logged in"))
+                {
+                    throw new EdulinkNotLoggedInException(this.client, new JsonRpcEventArgs(method, this.client.username), "", ex);
+                }
+                throw ex;
+            }
+            return retn;
         }
         public RPCClient(Edulink _client, string _url)
         {
@@ -95,6 +119,8 @@ namespace EduLinkRPC
     {
         public static string Url = "https://www.edulinkone.com/api/?method=";
         internal RPCClient Client;
+
+        public int MaxLoginRetryAttempts { get; set; } = 3;
 
         public event EventHandler<JsonRpcEventArgs> SendingRequest;
 
@@ -126,8 +152,35 @@ namespace EduLinkRPC
         internal string username;
         internal string password;
 
+        internal JToken interMediate(string method, Dictionary<string, object> param, int retryAttempts = 0)
+        {
+            JToken response = null;
+            try
+            {
+                if(string.IsNullOrWhiteSpace(_token))
+                { // havnt even connected, so we need to login first.
+                    login();
+                }
+                response = Client.Call(method, param);
+            }
+            catch (EdulinkNotLoggedInException)
+            {
+                if(retryAttempts > MaxLoginRetryAttempts)
+                {
+                    // we have attempted too many times, so we quit.
+                    throw new EdulinkSendException(this, new JsonRpcEventArgs(method, this.username), "Exceed maximum login retry attempts");
+                }
+                // we attempted, but the token has expired.
+                // so we attempt to login, then re-try.
+                login(); // login again, to get a new token.
+                response = interMediate(method, param, retryAttempts + 1);
+            }
+            return response;
+        }
+
         internal JToken login()
         {
+            // this should NOT use intermediate, as it would get in an endless loop.
             var response = Client.Call("EduLink.Login", new Dictionary<string, object>()
             {
                 {"establishment_id", Establishment },
@@ -146,7 +199,7 @@ namespace EduLinkRPC
 
         internal JToken status()
         {
-            var response = Client.Call("EduLink.Status", new Dictionary<string, object>()
+            var response = interMediate("EduLink.Status", new Dictionary<string, object>()
             {
                 {"last_visible", 0 },
                 {"authtoken", _token }
@@ -157,7 +210,7 @@ namespace EduLinkRPC
 
         internal JToken homework()
         {
-            var response = Client.Call("EduLink.Homework", new Dictionary<string, object>()
+            var response = interMediate("EduLink.Homework", new Dictionary<string, object>()
                 {
                     {"authtoken", AuthToken }
                 });
@@ -166,7 +219,7 @@ namespace EduLinkRPC
 
         internal JToken homeworkCompleted(int hwkId)
         {
-            var response = Client.Call("EduLink.HomeworkCompleted", new Dictionary<string, object>()
+            var response = interMediate("EduLink.HomeworkCompleted", new Dictionary<string, object>()
             {
                 {"authtoken", AuthToken },
                 {"homework_id", hwkId },
