@@ -83,14 +83,14 @@ namespace EduLinkRPC
             }
             catch(EdulinkException ex)
             {
+                if (ex.Message.Contains("not logged in"))
+                {
+                    throw new EdulinkNotLoggedInException(this.client, new JsonRpcEventArgs(method, this.client.username), "", ex);
+                }
                 throw ex;
             }
             catch (Exception ex)
             {
-                if(ex.Message.Contains("not logged in"))
-                {
-                    throw new EdulinkNotLoggedInException(this.client, new JsonRpcEventArgs(method, this.client.username), "", ex);
-                }
                 throw ex;
             }
             return retn;
