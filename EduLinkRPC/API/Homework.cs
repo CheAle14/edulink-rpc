@@ -6,7 +6,7 @@ using System.Text;
 namespace EduLinkRPC.API
 {
     [JsonObject(MemberSerialization.OptOut)]
-    internal class Homework
+    public class Homework
     {
         public int id { get; set; }
         public string activity { get; set; }

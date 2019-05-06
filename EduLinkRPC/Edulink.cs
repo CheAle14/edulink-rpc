@@ -15,7 +15,7 @@ namespace EduLinkRPC
 {
     public class EdulinkObject
     {
-        internal Edulink Client { get; set; }
+        public Edulink Client { get; set; }
 
         internal EdulinkObject(Edulink client)
         {
@@ -25,10 +25,9 @@ namespace EduLinkRPC
 
     public class EdulinkObject<T> : EdulinkObject
     {
-        public T Id { get; internal set; }
-        internal EdulinkObject(Edulink client) : base(client)
+        public T Id { get; set; }
+        protected EdulinkObject(Edulink client) : base(client)
         { 
-
         }
 
     }
@@ -142,6 +141,29 @@ namespace EduLinkRPC
         internal string username;
         internal string password;
 
+        internal Dictionary<int, AchievementType> types = new Dictionary<int, AchievementType>();
+        internal AchievementType GetAchievementType(int id)
+        {
+            if(types.Count == 0)
+            {
+                var jtoken = interMediate("EduLink.AchievementBehaviourLookups", new Dictionary<string, object>()
+                {
+                    {"authtoken", AuthToken }
+                });
+                var achievements = jtoken["achievement_types"];
+                var parsed = achievements.ToObject<API.AchievementType[]>();
+                foreach(var model in parsed)
+                {
+                    if (types.ContainsKey(model.id))
+                        continue;
+                    var entity = AchievementType.Create(this, model);
+                    types.Add(entity.Id, entity);
+                }
+            }
+            return types[id];
+        }
+        internal AchievementType GetAchievementType(API.AchievementTypeIds id) => GetAchievementType((int)id);
+
         internal JToken interMediate(string method, Dictionary<string, object> param, int retryAttempts = 0)
         {
             JToken response = null;
@@ -184,6 +206,7 @@ namespace EduLinkRPC
                 } }
             });
             AuthToken = response.Value<string>("authtoken");
+            LearnerId = response["user"].Value<int>("id");
             return response;
         }
 
@@ -192,7 +215,7 @@ namespace EduLinkRPC
             var response = interMediate("EduLink.Status", new Dictionary<string, object>()
             {
                 {"last_visible", 0 },
-                {"authtoken", _token }
+                {"authtoken", AuthToken }
             });
             LearnerId = response["user"].Value<int>("id");
             return response;
@@ -215,6 +238,16 @@ namespace EduLinkRPC
                 {"homework_id", hwkId },
                 {"learner_id", LearnerId },
                 {"source", "CheAle14-App" }
+            });
+            return response;
+        }
+
+        internal JToken achievements()
+        {
+            var response = interMediate("EduLink.Achievement", new Dictionary<string, object>()
+            {
+                {"authtoken", AuthToken },
+                {"learner_id", LearnerId.ToString() }
             });
             return response;
         }
@@ -258,7 +291,7 @@ namespace EduLinkRPC
             return homeworks.ToArray();
         }
 
-        public JToken CompleteHomework(Homework hwk)
+        public JToken CompleteHomework(IHomework hwk)
         {
             return homeworkCompleted(hwk.Id);
         }
@@ -266,6 +299,18 @@ namespace EduLinkRPC
         public JToken CompleteHomework(int hwkId)
         {
             return homeworkCompleted(hwkId);
+        }
+
+        public List<Achievement> GetAchievements()
+        {
+            var things = achievements();
+            var parsed = things["achievement"].ToObject<API.Achievement[]>();
+            var listed = new List<Achievement>();
+            foreach(var model in parsed)
+            {
+                listed.Add(Achievement.Create(this, model));
+            }
+            return listed;
         }
     }
 }

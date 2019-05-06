@@ -3,14 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using EduLinkRPC.Classes;
 
-namespace EduLinkRPC.Classes
+namespace EduLinkRPC.Addons.Discord
 {
-    public class Homework : EdulinkObject<int>, IHomework
+    public class ClassHomework : EdulinkObject<int>, IHomework
     {
-        static public explicit operator Addons.Discord.ClassHomework(Homework value)
+
+        public ClassHomework(Edulink client) : base(client)
         {
-            var newHwk = new Addons.Discord.ClassHomework(value.Client);
+        }
+
+        public static ClassHomework Create(IHomework value, Edulink client)
+        {
+            var newHwk = new Addons.Discord.ClassHomework(client);
             newHwk.Activity = value.Activity;
             newHwk.Attachments = value.Attachments;
             newHwk.AvailableDate = value.AvailableDate;
@@ -27,6 +33,7 @@ namespace EduLinkRPC.Classes
             newHwk.UserType = value.UserType;
             return newHwk;
         }
+
         [JsonProperty("activity")]
         public string Activity { get; internal set; }
 
@@ -85,24 +92,31 @@ namespace EduLinkRPC.Classes
                 return this.DueDate >= DateTime.Now;
             } }
 
-        public List<IHwkUser> AppliesTo { get; set; } = new List<IHwkUser>();
+        public List<BaseClass> GivenTo { get; set; } = new List<BaseClass>();
+
+        public List<IHwkUser> AppliesTo { get { return TotalUsersApplied.Select(x => x as IHwkUser).ToList(); } set { } }
 
         /// <summary>
         /// All users directly, and indirectly via classes, who recieved the homework
         /// </summary>
-        public List<IHwkUser> TotalUsersApplied { get
+        public List<DiscordHwkUser> TotalUsersApplied { get
             {
-                return AppliesTo;
+                var users = new List<DiscordHwkUser>();
+                foreach(var given in GivenTo)
+                {
+                    users.AddRange(given.Users);
+                }
+                return users;
             } }
 
-        internal Homework(Edulink client, API.Homework model) : base(client)
+        internal ClassHomework(Edulink client, API.Homework model) : base(client)
         {
             Update(model);
         }
 
-        internal static Homework Create(Edulink client, API.Homework model)
+        internal static ClassHomework Create(Edulink client, API.Homework model)
         {
-            return new Homework(client, model);
+            return new ClassHomework(client, model);
         }
 
         internal void Update(API.Homework model)

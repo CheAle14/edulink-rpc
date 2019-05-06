@@ -3,101 +3,34 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace EduLinkRPC.Classes
 {
-    public class HwkUser
+    public class HwkUser : IHwkUser
     {
-        [JsonIgnore]
-        public string Name => User.Nickname ?? User.Username;
-        public SocketGuildUser User;
+        public string Name { get; set; }
 
-        public string Username;
-        public string Password;
+        public string UserName { get; }
 
-        [JsonIgnore] // if password is empty, then we should only ping them if they are in classes.
-        public bool IsNotifyOnly => string.IsNullOrWhiteSpace(Password);
+        public string Password { get; }
 
-        [JsonIgnore]
-        public Edulink EdulinkClient;
+        public Edulink Client { get; set; }
 
-        [JsonIgnore]
-        public List<Homework> Homework;
+        public List<IHomework> Homework { get; protected set; }
 
-        /// <summary>
-        /// Days that we notify on, with 0 being a notification for bringing it in on the day.
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        public List<int> NotifyOnDays;
-
-        /// <summary>
-        /// Notify for homeworks given by students, rather than teachers.
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [System.ComponentModel.DefaultValue(true)]
-        public bool NotifyForSelfHomework;
-
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [System.ComponentModel.DefaultValue(false)]
-        public bool NotifyInDebug;
-
-        public HwkUser(SocketGuildUser user, string username, string password)
+        public HwkUser(string name, string uName, string password, int establishment = 60)
         {
-            User = user;
-            Username = username;
-            if (Username == "cheale14")
-                NotifyInDebug = true;
+            Name = name;
+            UserName = uName;
             Password = password;
-            EdulinkClient = new Edulink(username, password);
-            NotifyOnDays = new List<int>() { 0, 1, 3, 5, 7, 14 };
-            NotifyForSelfHomework = true;
+            Client = new Edulink(uName, password, establishment);
         }
 
-        public bool ShouldNotify(Homework hwk)
+        public void RefreshHomework()
         {
-            // we assume that this hwk is passed because it 'AppliesTo' us
-
-            int date = hwk.DaysUntilDue;
-            if (!NotifyOnDays.Contains(date))
-                return false;
-            // check if self homework
-
-            if (hwk.UserType == "learner" && !NotifyForSelfHomework)
-                return false;
-
-            // debug check
-#if DEBUG
-            if (!NotifyInDebug)
-                return false;
-#endif
-            if (hwk.Completed)
-                return false;
-
-            if (OtherHomeworksMarkedAsDone.Contains(hwk.Id))
-                return false;
-
-            return true;
-        }
-
-        public List<string> Classes = new List<string>();
-
-        /// <summary>
-        /// Homeworks of other people that are marked as done.
-        /// </summary>
-        public List<int> OtherHomeworksMarkedAsDone = new List<int>();
-
-        [JsonConstructor]
-        private HwkUser(string username, string password, SocketGuildUser user, List<int> notifyOnDays)
-        {
-            User = user;
-            if(notifyOnDays == null)
-            {
-                notifyOnDays = new List<int>() { 0, 1, 3, 5, 7, 14 };
-            }
-            NotifyOnDays = notifyOnDays;
-            EdulinkClient = new Edulink(username, password);
-            Username = username;
-            Password = password;
+            var hwk = Client.GetHomework();
+            Homework = hwk.Select(x => x as IHomework).ToList();
         }
     }
 }

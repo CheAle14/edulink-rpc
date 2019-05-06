@@ -5,7 +5,7 @@ using System.Text;
 
 namespace EduLinkRPC.API
 {
-    internal class Attachment
+    public class Attachment
     {
         public string filename { get; set; }
         public long filesize { get; set; }

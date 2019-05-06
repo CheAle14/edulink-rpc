@@ -22,7 +22,7 @@ namespace EduLinkRPC.Classes
             Update(model);
         }
 
-        internal static HwkAttachment Create(Edulink client, API.Attachment modeL)
+        public static HwkAttachment Create(Edulink client, API.Attachment modeL)
         {
             return new HwkAttachment(client, modeL);
         }
