@@ -9,7 +9,6 @@ namespace EduLinkRPC.Addons.Discord
 {
     public class ClassHomework : EdulinkObject<int>, IHomework
     {
-
         public ClassHomework(Edulink client) : base(client)
         {
         }
@@ -102,7 +101,7 @@ namespace EduLinkRPC.Addons.Discord
         public List<DiscordHwkUser> TotalUsersApplied { get
             {
                 var users = new List<DiscordHwkUser>();
-                foreach(var given in GivenTo)
+                foreach (var given in GivenTo)
                 {
                     users.AddRange(given.Users);
                 }

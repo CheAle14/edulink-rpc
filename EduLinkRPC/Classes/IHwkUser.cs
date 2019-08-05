@@ -10,9 +10,8 @@ namespace EduLinkRPC.Classes
         string UserName { get; }
         string Password { get; }
 
-        Edulink Client {get;}
+        Edulink Client { get; }
 
         List<IHomework> Homework { get; }
-
     }
 }

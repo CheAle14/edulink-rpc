@@ -29,7 +29,6 @@ namespace EduLinkRPC
         protected EdulinkObject(Edulink client) : base(client)
         { 
         }
-
     }
 
     internal class RPCClient
@@ -72,7 +71,6 @@ namespace EduLinkRPC
             return CallInternal(method, null);
         }
 
-
         internal JToken Call(string method, Dictionary<string, object> paramaters)
         {
             JToken retn = null;
@@ -112,7 +110,6 @@ namespace EduLinkRPC
             Username = uname;
         }
     }
-
 
     public class Edulink
     {

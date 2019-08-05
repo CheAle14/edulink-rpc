@@ -16,7 +16,6 @@ namespace EduLinkRPC.Classes
         [JsonProperty("mime_type")]
         public string MimeType { get; internal set; }
 
-
         internal HwkAttachment(Edulink client, API.Attachment model) : base(client)
         {
             Update(model);

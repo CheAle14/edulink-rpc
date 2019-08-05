@@ -10,7 +10,7 @@ namespace EduLinkRPC.Addons.Discord
     public class DiscordHwkUser : IHwkUser
     {
         [JsonIgnore]
-        public string Name => User.Nickname ?? User.Username;
+        public string Name => User.Nickname ?? User.Username ?? "<n/a>";
 
         public SocketGuildUser User;
 
@@ -58,12 +58,11 @@ namespace EduLinkRPC.Addons.Discord
         public bool ShouldNotify(ClassHomework hwk)
         {
             // we assume that this hwk is passed because it 'AppliesTo' us
-
             int date = hwk.DaysUntilDue;
             if (!NotifyOnDays.Contains(date))
                 return false;
-            // check if self homework
 
+            // check if self homework
             if (hwk.UserType == "learner" && !NotifyForSelfHomework)
                 return false;
 
@@ -92,7 +91,7 @@ namespace EduLinkRPC.Addons.Discord
         private DiscordHwkUser(string username, string password, SocketGuildUser user, List<int> notifyOnDays)
         {
             User = user;
-            if(notifyOnDays == null)
+            if (notifyOnDays == null)
             {
                 notifyOnDays = new List<int>() { 0, 1, 3, 5, 7, 14 };
             }
