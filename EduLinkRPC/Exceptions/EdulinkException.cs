@@ -15,6 +15,13 @@ namespace EduLinkRPC
         {
             Client = client;
         }
+        public override string ToString()
+        {
+            var ss = base.ToString();
+            if (Client != null && !string.IsNullOrWhiteSpace(Client.username))
+                ss = $"{Client.username} :: {ss}";
+            return ss;
+        }
     }
 
     public class EdulinkSendException : EdulinkException

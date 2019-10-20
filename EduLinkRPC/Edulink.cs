@@ -133,7 +133,11 @@ namespace EduLinkRPC
                 return _token;
             } set { _token = value; } }
         internal int Establishment;
-        internal int LearnerId;
+        internal int learnerId;
+
+        public int LearnerId => learnerId;
+
+        public string Username => username;
 
         internal string username;
         internal string password;
@@ -203,7 +207,7 @@ namespace EduLinkRPC
                 } }
             });
             AuthToken = response.Value<string>("authtoken");
-            LearnerId = response["user"].Value<int>("id");
+            learnerId = response["user"].Value<int>("id");
             return response;
         }
 
@@ -214,7 +218,7 @@ namespace EduLinkRPC
                 {"last_visible", 0 },
                 {"authtoken", AuthToken }
             });
-            LearnerId = response["user"].Value<int>("id");
+            learnerId = response["user"].Value<int>("id");
             return response;
         }
 
@@ -233,7 +237,7 @@ namespace EduLinkRPC
             {
                 {"authtoken", AuthToken },
                 {"homework_id", hwkId },
-                {"learner_id", LearnerId },
+                {"learner_id", learnerId },
                 {"source", "CheAle14-App" }
             });
             return response;
@@ -244,7 +248,7 @@ namespace EduLinkRPC
             var response = interMediate("EduLink.Achievement", new Dictionary<string, object>()
             {
                 {"authtoken", AuthToken },
-                {"learner_id", LearnerId.ToString() }
+                {"learner_id", learnerId.ToString() }
             });
             return response;
         }
@@ -257,6 +261,12 @@ namespace EduLinkRPC
             Client = new RPCClient(this, Url);
         }
 
+        public Edulink(string uname, int learner_id, string token, int establishment_id = 60) : this(uname, null, establishment_id)
+        {
+            learnerId = learner_id;
+            _token = token;
+        }
+
         public JToken Login()
         {
             return login();
@@ -265,6 +275,29 @@ namespace EduLinkRPC
         public JToken Status()
         {
             return status();
+        }
+
+        JToken timetable()
+        {
+            var response = interMediate("EduLink.Timetable", new Dictionary<string, object>()
+            {
+                {"authtoken", AuthToken },
+                {"learner_id", learnerId.ToString() },
+                {"date", DateTime.Now.ToString("yyyy-MM-dd") }
+            });
+            return response;
+        }
+
+        public Timetable GetTimetable()
+        {
+            var response = timetable();
+            var weeks = response["weeks"];
+            var weeksModel = weeks.ToObject<API.TableWeek[]>();
+            var timeTableModel = new API.Timetable()
+            {
+                weeks = weeksModel.ToList()
+            };
+            return Timetable.Create(this, timeTableModel);
         }
 
         public Homework[] GetHomework(bool includePast = false)
