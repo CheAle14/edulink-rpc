@@ -237,8 +237,9 @@ namespace EduLinkRPC
             {
                 {"authtoken", AuthToken },
                 {"homework_id", hwkId },
-                {"learner_id", learnerId },
-                {"source", "CheAle14-App" }
+                {"learner_id", learnerId.ToString() },
+                {"source", "EduLink" },
+                {"completed", "true" }
             });
             return response;
         }
